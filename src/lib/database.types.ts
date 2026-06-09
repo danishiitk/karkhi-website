@@ -89,6 +89,7 @@ export type Database = {
           slug: string;
           name: string;
           urdu_name: string;
+          hindi_name?: string | null;
           alternate_spellings?: string[];
 
         };
@@ -97,6 +98,7 @@ export type Database = {
           slug?: string;
           name?: string;
           urdu_name?: string;
+          hindi_name?: string | null;
           alternate_spellings?: string[];
 
         };
@@ -107,6 +109,7 @@ export type Database = {
           id: string;
           name: string;
           urdu_name?: string | null;
+          hindi_name?: string | null;
           father_id?: string | null;
           village_id: string;
           generation?: number | null;
@@ -118,6 +121,7 @@ export type Database = {
           id?: string;
           name?: string;
           urdu_name?: string | null;
+          hindi_name?: string | null;
           father_id?: string | null;
           village_id?: string;
           generation?: number | null;
