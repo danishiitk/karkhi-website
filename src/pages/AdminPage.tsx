@@ -241,10 +241,10 @@ export default function AdminPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-ink/5 text-ink/60 font-semibold uppercase">
                 <tr>
-                  <th className="px-6 py-4">{t('villages')}</th>
-                  <th className="px-6 py-4">{t('villageSlug')}</th>
-                  <th className="px-6 py-4">{t('totalPeople')}</th>
-                  <th className="px-6 py-4">{t('actions')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('villages')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('villageSlug')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('totalPeople')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/10">
@@ -252,19 +252,19 @@ export default function AdminPage() {
                   <tr key={v.id} className="group">
                     {editingVillageId === v.id ? (
                       <>
-                        <td className="px-6 py-3">
+                        <td className="px-4 py-2 sm:px-6 sm:py-3">
                           <div className="space-y-2">
                             <input type="text" value={villageForm.name} onChange={e => setVillageForm(f => ({...f, name: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" placeholder={t('englishName')} />
                             <input type="text" value={villageForm.urduName} onChange={e => setVillageForm(f => ({...f, urduName: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" dir="rtl" lang="ur" placeholder={t('urduName')} />
                             <input type="text" value={villageForm.hindiName} onChange={e => setVillageForm(f => ({...f, hindiName: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" placeholder={t('hindiName')} />
                           </div>
                         </td>
-                        <td className="px-6 py-3">
+                        <td className="px-4 py-2 sm:px-6 sm:py-3">
                           <input type="text" value={villageForm.slug} onChange={e => setVillageForm(f => ({...f, slug: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" />
                           <input type="text" value={villageForm.alternateSpellings} onChange={e => setVillageForm(f => ({...f, alternateSpellings: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none mt-2" placeholder={t('alternateSpellings')} />
                         </td>
-                        <td className="px-6 py-3">{peopleCounts[v.id] || 0}</td>
-                        <td className="px-6 py-3">
+                        <td className="px-4 py-2 sm:px-6 sm:py-3">{peopleCounts[v.id] || 0}</td>
+                        <td className="px-4 py-2 sm:px-6 sm:py-3">
                           <div className="flex items-center gap-2">
                             <button onClick={handleSaveVillage} disabled={savingVillage} className="p-1.5 text-white bg-cedar hover:bg-cedar/90 rounded-md transition disabled:opacity-50" title={t('save')}>
                               <Check size={16} />
@@ -277,7 +277,7 @@ export default function AdminPage() {
                       </>
                     ) : (
                       <>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4">
                           <div className="font-medium">{getLocalizedName(v, language)}</div>
                           {language !== "ur" && v.urdu_name && <div className="text-xs text-cedar" dir="rtl" lang="ur">{v.urdu_name}</div>}
                           {language !== "hi" && v.hindi_name && <div className="text-xs text-cedar">{v.hindi_name}</div>}
@@ -285,9 +285,9 @@ export default function AdminPage() {
                             <div className="text-[11px] text-ink/40 mt-0.5">{v.alternate_spellings.join(", ")}</div>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-ink/60">{v.slug}</td>
-                        <td className="px-6 py-4">{peopleCounts[v.id] || 0}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4 text-ink/60">{v.slug}</td>
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4">{peopleCounts[v.id] || 0}</td>
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => startEditVillage(v)} className="p-1.5 text-ink/40 hover:text-cedar hover:bg-ink/5 rounded-md transition" title={t('editVillage')}>
                               <Edit2 size={16} />
@@ -330,10 +330,10 @@ export default function AdminPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-ink/5 text-ink/60 font-semibold uppercase">
                 <tr>
-                  <th className="px-6 py-4">{t('nameEmail')}</th>
-                  <th className="px-6 py-4">{t('role')}</th>
-                  <th className="px-6 py-4">{t('assignedVillage')}</th>
-                  <th className="px-6 py-4">{t('actions')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('nameEmail')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('role')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('assignedVillage')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/10">
@@ -344,11 +344,11 @@ export default function AdminPage() {
 
                   return (
                   <tr key={p.id}>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
                       <div className="font-medium">{p.full_name || t('noName')}</div>
                       <div className="text-ink/60 text-xs">{p.email}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
                       <select
                         value={pending.role}
                         onChange={(e) => setPendingRoleUpdates(prev => ({ ...prev, [p.id]: { ...pending, role: e.target.value as UserRole } }))}
@@ -360,7 +360,7 @@ export default function AdminPage() {
                         <option value="super_admin">Super Admin</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
                       <select 
                         className="bg-ink/5 border-none rounded-lg text-sm focus:ring-2 focus:ring-cedar disabled:opacity-50"
                         value={pending.assigned_village_id || ""}
@@ -373,7 +373,7 @@ export default function AdminPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
                       <button 
                         onClick={() => executeRoleUpdate(p.id, pending.role, pending.assigned_village_id)}
                         disabled={!hasChanges || isUpdating}

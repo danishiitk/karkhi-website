@@ -120,7 +120,7 @@ export default function VillagePage() {
         </p>
       </div>
 
-      <section className="flex-1 p-4 lg:p-6 overflow-hidden bg-paper">
+      <section className="flex-1 p-4 lg:p-6 overflow-hidden bg-paper flex flex-col min-h-[500px] lg:min-h-0">
         {view === "canvas" && <TreeView 
           rootNode={treeRoot} 
           allPeople={people} 

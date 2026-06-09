@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { Person } from "../types";
 import { getLineage } from "../lib/queries";
-import { GitBranch, Search } from "lucide-react";
+import { GitBranch, Search, X } from "lucide-react";
 import { useTranslation } from "../contexts/LanguageContext";
 import { getLocalizedName } from "../lib/i18n";
 
@@ -18,6 +18,9 @@ export default function LineageView({ people }: { people: Person[] }) {
   useEffect(() => {
     if (selectId && selectId !== selectedPerson) {
       loadLineage(selectId);
+    } else if (!selectId) {
+      setSelectedPerson(null);
+      setLineage([]);
     }
   }, [selectId]);
 
@@ -35,9 +38,13 @@ export default function LineageView({ people }: { people: Person[] }) {
     }
   };
 
-  const handleSelect = (personId: string) => {
+  const handleSelect = (personId: string | null) => {
     setSearchParams(prev => { 
-      prev.set("select", personId); 
+      if (personId) {
+        prev.set("select", personId); 
+      } else {
+        prev.delete("select");
+      }
       return prev; 
     }, { replace: true });
   };
@@ -88,33 +95,45 @@ export default function LineageView({ people }: { people: Person[] }) {
       </div>
       
       {selectedPerson && (
-        <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-sm border border-ink/8 p-6 lg:p-8 animate-fade-in-up">
-          <h3 className="font-serif font-bold text-xl mb-8 flex items-center gap-2 text-ink border-b border-ink/5 pb-4">
-            <div className="p-2 rounded-lg bg-emerald/10 text-emerald">
-              <GitBranch size={18}/>
+        <>
+          <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm z-40 lg:hidden" onClick={() => handleSelect(null)} />
+          <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-y-auto max-h-[85vh] p-6 lg:relative lg:inset-auto lg:z-auto lg:rounded-2xl lg:shadow-sm lg:max-h-none lg:w-[400px] lg:p-8 lg:border lg:border-ink/8 animate-fade-in-up">
+            <div className="lg:hidden flex justify-center mb-6">
+               <div className="w-12 h-1.5 bg-ink/10 rounded-full" />
             </div>
-            {t('ancestryPath')}
-          </h3>
-          
-          {loading ? (
-            <div className="text-ink/40 text-center py-8 font-medium animate-pulse">{t('loadingLineage')}</div>
-          ) : (
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-emerald/40 before:via-emerald/20 before:to-transparent">
-              {lineage.map((p, i) => (
-                <div key={p.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald text-white shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    {i === lineage.length - 1 ? <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_30px_rgba(45,106,79,0.5)]"/> : <div className="w-1.5 h-1.5 rounded-full bg-white/60"/>}
-                  </div>
-                  <div className={`w-[calc(100%-3.5rem)] md:w-[calc(50%-2.5rem)] bg-white border ${i === lineage.length - 1 ? 'border-emerald/30 shadow-md bg-emerald/5' : 'border-ink/8 shadow-sm'} p-4 rounded-xl transition-all hover:border-emerald/50`}>
-                    <div className={`font-serif font-bold ${i === lineage.length - 1 ? 'text-emerald text-lg' : 'text-ink'}`}>{getLocalizedName(p, language)}</div>
-                    {language !== 'ur' && p.urdu_name && <div className="text-sm text-emerald mt-1 font-medium" dir="rtl" lang="ur">{p.urdu_name}</div>}
-                    {language !== 'hi' && p.hindi_name && <div className="text-sm text-emerald mt-1 font-medium">{p.hindi_name}</div>}
-                  </div>
+            
+            <div className="flex justify-between items-center mb-8 border-b border-ink/5 pb-4">
+              <h3 className="font-serif font-bold text-xl flex items-center gap-2 text-ink">
+                <div className="p-2 rounded-lg bg-emerald/10 text-emerald">
+                  <GitBranch size={18}/>
                 </div>
-              ))}
+                {t('ancestryPath')}
+              </h3>
+              <button onClick={() => handleSelect(null)} className="lg:hidden p-2 text-ink/40 hover:text-ink/70 hover:bg-ink/5 rounded-full transition-colors">
+                <X size={20}/>
+              </button>
             </div>
-          )}
-        </div>
+            
+            {loading ? (
+              <div className="text-ink/40 text-center py-8 font-medium animate-pulse">{t('loadingLineage')}</div>
+            ) : (
+              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-emerald/40 before:via-emerald/20 before:to-transparent">
+                {lineage.map((p, i) => (
+                  <div key={p.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full border-[3px] border-white bg-emerald text-white shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                      {i === lineage.length - 1 ? <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_30px_rgba(45,106,79,0.5)]"/> : <div className="w-1.5 h-1.5 rounded-full bg-white/60"/>}
+                    </div>
+                    <div className={`w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] bg-white border ${i === lineage.length - 1 ? 'border-emerald/30 shadow-md bg-emerald/5' : 'border-ink/8 shadow-sm'} p-3 rounded-xl transition-all hover:border-emerald/50`}>
+                      <div className={`font-serif font-bold ${i === lineage.length - 1 ? 'text-emerald text-base' : 'text-ink text-sm'}`}>{getLocalizedName(p, language)}</div>
+                      {language !== 'ur' && p.urdu_name && <div className="text-xs text-emerald/80 mt-0.5 font-medium" dir="rtl" lang="ur">{p.urdu_name}</div>}
+                      {language !== 'hi' && p.hindi_name && <div className="text-xs text-emerald/80 mt-0.5 font-medium">{p.hindi_name}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

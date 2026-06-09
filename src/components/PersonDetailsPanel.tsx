@@ -47,19 +47,19 @@ export default function PersonDetailsPanel({ person, father, childrenCount, onCl
     }
   };
 
-  const getLineageString = () => {
-    if (!allPeople) return null;
-    const parts = [getLocalizedName(person, language)];
+  const getLineageList = () => {
+    if (!allPeople) return [];
+    const parts = [person];
     let current = person;
     let depth = 0;
     while (current.father_id && depth < 10) {
       const parent = allPeople.find(p => p.id === current.father_id);
       if (!parent) break;
-      parts.push(getLocalizedName(parent, language));
+      parts.push(parent);
       current = parent;
       depth++;
     }
-    return parts.join(" s/o ");
+    return parts;
   };
 
   const editInputClass = "w-full text-sm border border-ink/10 rounded-lg px-3 py-2 outline-none transition focus:border-cedar focus:ring-2 focus:ring-cedar/15 bg-white/80";
@@ -131,8 +131,16 @@ export default function PersonDetailsPanel({ person, father, childrenCount, onCl
         )}
         {allPeople && (
           <div>
-            <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider">{t('genealogy')}</h3>
-            <p className="mt-1 font-medium text-ink">{getLineageString()}</p>
+            <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider mb-2">{t('genealogy')}</h3>
+            <div className="flex flex-col space-y-1.5 mt-1 border-l-2 border-cedar/20 pl-3 rtl:border-l-0 rtl:border-r-2 rtl:pl-0 rtl:pr-3">
+              {getLineageList().map((p, idx) => (
+                <div key={p.id} className="text-sm">
+                  <span className={idx === 0 ? "font-bold text-cedar" : "font-medium text-ink/70"}>
+                    {getLocalizedName(p, language)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         <div>

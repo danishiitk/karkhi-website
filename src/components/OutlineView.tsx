@@ -1,25 +1,29 @@
 import type { DisplayTreeNode } from "../types";
 import { ChevronDown, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "../contexts/LanguageContext";
+import { getLocalizedName } from "../lib/i18n";
 
 function OutlineNode({ node, depth = 0 }: { node: DisplayTreeNode; depth?: number }) {
   const [expanded, setExpanded] = useState(true);
+  const { language } = useTranslation();
   const hasChildren = node.children.length > 0;
 
   return (
     <div className="font-sans text-sm animate-fade-in">
       <div 
-        className="flex items-center gap-2 py-2 hover:bg-emerald/5 rounded-lg px-2 cursor-pointer transition-colors"
-        style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
+        className="flex items-center flex-wrap sm:flex-nowrap gap-1 sm:gap-2 py-1.5 sm:py-2 hover:bg-emerald/5 rounded-lg px-2 cursor-pointer transition-colors"
+        style={{ paddingLeft: `${depth * 1 + 0.5}rem` }}
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="w-5 flex justify-center text-emerald/60">
-          {hasChildren ? (expanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>) : <span className="w-1.5 h-1.5 rounded-full bg-emerald/30"/>}
+        <div className="w-4 sm:w-5 flex justify-center text-emerald/60 shrink-0">
+          {hasChildren ? (expanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>) : <span className="w-1.5 h-1.5 rounded-full bg-emerald/30"/>}
         </div>
-        <User size={15} className={node.is_placeholder ? "text-ink/30" : "text-emerald"} />
-        <span className="font-serif font-bold text-ink/90 text-base">{node.name}</span>
-        {node.urdu_name && <span className="text-emerald ml-2 font-medium" dir="rtl" lang="ur">{node.urdu_name}</span>}
-        {node.generation && <span className="text-[10px] uppercase font-bold bg-emerald/10 text-emerald px-2 py-0.5 rounded-full ml-2">Gen {node.generation}</span>}
+        <User size={14} className={`shrink-0 ${node.is_placeholder ? "text-ink/30" : "text-emerald"}`} />
+        <span className="font-serif font-bold text-ink/90 text-sm sm:text-base ml-1">{getLocalizedName(node, language)}</span>
+        {language !== 'ur' && node.urdu_name && <span className="text-emerald ml-1 sm:ml-2 font-medium text-xs sm:text-sm" dir="rtl" lang="ur">{node.urdu_name}</span>}
+        {language !== 'hi' && node.hindi_name && <span className="text-emerald ml-1 sm:ml-2 font-medium text-xs sm:text-sm">{node.hindi_name}</span>}
+        {node.generation && <span className="shrink-0 text-[9px] sm:text-[10px] uppercase font-bold bg-emerald/10 text-emerald px-1.5 sm:px-2 py-0.5 rounded-full ml-auto sm:ml-2">Gen {node.generation}</span>}
       </div>
       {expanded && hasChildren && (
         <div className="relative before:absolute before:left-[1.1rem] before:top-0 before:bottom-0 before:w-px before:bg-ink/5">

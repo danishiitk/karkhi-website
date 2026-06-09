@@ -20,22 +20,22 @@ export default function TableView({ people }: { people: Person[] }) {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-onyx sticky top-0 z-10 shadow-sm">
               <tr>
-                <th className="p-5 font-serif font-bold text-white tracking-wide">Name</th>
-                <th className="p-5 font-serif font-bold text-white tracking-wide">Urdu Name</th>
-                <th className="p-5 font-serif font-bold text-white tracking-wide">Hindi Name</th>
-                <th className="p-5 font-serif font-bold text-white tracking-wide">Generation</th>
+                <th className="px-4 py-3 sm:px-5 sm:py-4 font-serif font-bold text-white tracking-wide">Name</th>
+                <th className="px-4 py-3 sm:px-5 sm:py-4 font-serif font-bold text-white tracking-wide">Urdu Name</th>
+                <th className="px-4 py-3 sm:px-5 sm:py-4 font-serif font-bold text-white tracking-wide">Hindi Name</th>
+                <th className="px-4 py-3 sm:px-5 sm:py-4 font-serif font-bold text-white tracking-wide">Generation</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/5">
               {sorted.map((p, i) => (
                 <tr key={p.id} className="hover:bg-cedar/5 transition-colors animate-fade-in" style={{ animationDelay: `${Math.min(i * 10, 500)}ms` }}>
-                  <td className="p-5 font-bold font-serif text-ink text-base">
+                  <td className="px-4 py-2 sm:px-5 sm:py-3 font-bold font-serif text-ink text-base">
                     {p.name} 
                     {p.is_placeholder && <span className="ml-3 text-[10px] uppercase tracking-wider font-sans bg-ink/5 px-2 py-1 rounded-md text-ink/50 border border-ink/10">Branch Placeholder</span>}
                   </td>
-                  <td className="p-5 text-emerald font-medium text-base" dir="rtl" lang="ur">{p.urdu_name || "-"}</td>
-                  <td className="p-5 text-emerald font-medium text-base">{p.hindi_name || "-"}</td>
-                  <td className="p-5">
+                  <td className="px-4 py-2 sm:px-5 sm:py-3 text-emerald font-medium text-base" dir="rtl" lang="ur">{p.urdu_name || "-"}</td>
+                  <td className="px-4 py-2 sm:px-5 sm:py-3 text-emerald font-medium text-base">{p.hindi_name || "-"}</td>
+                  <td className="px-4 py-2 sm:px-5 sm:py-3">
                     {p.generation ? (
                       <span className="bg-cedar/10 text-cedar px-3 py-1 rounded-full text-xs font-bold">Gen {p.generation}</span>
                     ) : (
