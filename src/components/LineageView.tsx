@@ -43,20 +43,20 @@ export default function LineageView({ people }: { people: Person[] }) {
   };
 
   return (
-    <div className="flex h-full gap-4 flex-col lg:flex-row">
-      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-ink/10 p-4 min-h-[500px]">
-        <h3 className="font-semibold mb-4">{t('selectPersonToViewAncestry')}</h3>
-        <div className="relative mb-4 shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" size={16} />
+    <div className="flex h-full gap-5 flex-col lg:flex-row p-2">
+      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-ink/8 p-5 min-h-[500px] hover-lift">
+        <h3 className="font-serif font-bold text-lg mb-4 text-ink">{t('selectPersonToViewAncestry')}</h3>
+        <div className="relative mb-5 shrink-0">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
           <input 
             type="text"
             placeholder={t('searchPeople')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-ink/5 border-none rounded-lg text-sm focus:ring-2 focus:ring-cedar"
+            className="w-full pl-11 pr-4 py-3 bg-ink/5 border border-ink/5 rounded-xl text-sm focus:bg-white focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none transition-all"
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 overflow-y-auto content-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto content-start pr-2 scrollbar-thin">
           {people.filter(p => 
             p.name.toLowerCase().includes(search.toLowerCase()) || 
             (p.urdu_name && p.urdu_name.includes(search)) ||
@@ -65,11 +65,16 @@ export default function LineageView({ people }: { people: Person[] }) {
             <button 
               key={p.id} 
               onClick={() => handleSelect(p.id)}
-              className={`text-left p-3 rounded-lg border text-sm transition ${selectedPerson === p.id ? "bg-cedar/10 border-cedar text-cedar font-medium" : "bg-white border-ink/10 hover:border-cedar/50"}`}
+              className={`text-left p-4 rounded-xl border text-sm transition-all duration-200 ${selectedPerson === p.id ? "bg-emerald/10 border-emerald text-emerald font-bold shadow-sm" : "bg-white border-ink/8 hover:border-emerald/40 hover:bg-ink/[0.02]"}`}
             >
-              {getLocalizedName(p, language)} 
-              {language !== 'ur' && p.urdu_name && <span className="ml-1 opacity-70" dir="rtl" lang="ur">({p.urdu_name})</span>}
-              {language !== 'hi' && p.hindi_name && <span className="ml-1 opacity-70">({p.hindi_name})</span>}
+              <div className="font-serif text-base">{getLocalizedName(p, language)}</div>
+              {(language !== 'ur' && p.urdu_name) || (language !== 'hi' && p.hindi_name) ? (
+                <div className="mt-1 opacity-70 font-medium">
+                  {language !== 'ur' && p.urdu_name && <span dir="rtl" lang="ur" className="text-emerald">{p.urdu_name}</span>}
+                  {language !== 'ur' && p.urdu_name && language !== 'hi' && p.hindi_name && <span className="mx-1">•</span>}
+                  {language !== 'hi' && p.hindi_name && <span className="text-emerald">{p.hindi_name}</span>}
+                </div>
+              ) : null}
             </button>
           ))}
           {people.filter(p => 
@@ -77,27 +82,33 @@ export default function LineageView({ people }: { people: Person[] }) {
             (p.urdu_name && p.urdu_name.includes(search)) ||
             (p.hindi_name && p.hindi_name.includes(search))
           ).length === 0 && (
-            <div className="col-span-full py-8 text-center text-ink/50 text-sm">{t('noPeopleFound')}</div>
+            <div className="col-span-full py-12 text-center text-ink/40 font-medium italic">{t('noPeopleFound')}</div>
           )}
         </div>
       </div>
       
       {selectedPerson && (
-        <div className="w-full lg:w-96 bg-white rounded-xl shadow-sm border border-ink/10 p-6">
-          <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><GitBranch/> {t('ancestryPath')}</h3>
+        <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-sm border border-ink/8 p-6 lg:p-8 animate-fade-in-up">
+          <h3 className="font-serif font-bold text-xl mb-8 flex items-center gap-2 text-ink border-b border-ink/5 pb-4">
+            <div className="p-2 rounded-lg bg-emerald/10 text-emerald">
+              <GitBranch size={18}/>
+            </div>
+            {t('ancestryPath')}
+          </h3>
+          
           {loading ? (
-            <div className="text-ink/50">{t('loadingLineage')}</div>
+            <div className="text-ink/40 text-center py-8 font-medium animate-pulse">{t('loadingLineage')}</div>
           ) : (
-            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-ink/10 before:to-transparent">
+            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-emerald/40 before:via-emerald/20 before:to-transparent">
               {lineage.map((p, i) => (
-                <div key={p.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-cedar text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                    {i === lineage.length - 1 ? <div className="w-2 h-2 rounded-full bg-white"/> : <div className="w-1 h-1 rounded-full bg-white/50"/>}
+                <div key={p.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald text-white shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    {i === lineage.length - 1 ? <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_30px_rgba(45,106,79,0.5)]"/> : <div className="w-1.5 h-1.5 rounded-full bg-white/60"/>}
                   </div>
-                  <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-ink/5 p-3 rounded-lg shadow-sm">
-                    <div className="font-bold text-cedar">{getLocalizedName(p, language)}</div>
-                    {language !== 'ur' && p.urdu_name && <div className="text-sm opacity-80" dir="rtl" lang="ur">{p.urdu_name}</div>}
-                    {language !== 'hi' && p.hindi_name && <div className="text-sm opacity-80">{p.hindi_name}</div>}
+                  <div className={`w-[calc(100%-3.5rem)] md:w-[calc(50%-2.5rem)] bg-white border ${i === lineage.length - 1 ? 'border-emerald/30 shadow-md bg-emerald/5' : 'border-ink/8 shadow-sm'} p-4 rounded-xl transition-all hover:border-emerald/50`}>
+                    <div className={`font-serif font-bold ${i === lineage.length - 1 ? 'text-emerald text-lg' : 'text-ink'}`}>{getLocalizedName(p, language)}</div>
+                    {language !== 'ur' && p.urdu_name && <div className="text-sm text-emerald mt-1 font-medium" dir="rtl" lang="ur">{p.urdu_name}</div>}
+                    {language !== 'hi' && p.hindi_name && <div className="text-sm text-emerald mt-1 font-medium">{p.hindi_name}</div>}
                   </div>
                 </div>
               ))}

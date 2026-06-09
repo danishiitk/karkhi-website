@@ -1,4 +1,4 @@
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -77,37 +77,50 @@ export default function VillagePage() {
     setSearchParams(prev => { prev.set("view", v); return prev; });
   };
 
-  if (loading) return <div className="p-12 text-center text-ink/60">{t('loadingVillage')}</div>;
-  if (!village) return <div className="p-12 text-center text-madder">{t('villageNotFound')}</div>;
+  if (loading) return <div className="p-12 text-center text-ink/50 font-medium">{t('loadingVillage')}</div>;
+  if (!village) return <div className="p-12 text-center text-madder font-medium">{t('villageNotFound')}</div>;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] flex flex-col bg-paper">
-      <section className="shrink-0 border-b border-ink/10 bg-white/55 px-4 py-4 md:px-6">
-        <Link to="/" className="inline-flex items-center gap-2 rounded-md py-1 text-sm font-semibold text-cedar hover:text-madder transition">
-          <ArrowLeft size={16} /> {t('backToVillages')}
-        </Link>
-        <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-
-            <h1 className="mt-2 text-3xl font-bold text-ink flex gap-3 items-baseline">
-              {getLocalizedName(village, language)} 
-              {language !== 'ur' && village.urdu_name && <span className="text-2xl text-cedar font-medium" lang="ur" dir="rtl">{village.urdu_name}</span>}
-              {language !== 'hi' && village.hindi_name && <span className="text-2xl text-cedar font-medium">{village.hindi_name}</span>}
-            </h1>
-
-          </div>
-          <div className="flex items-center gap-3">
-            <ViewSwitcher current={view} onChange={handleViewChange} />
-            {canEditVillage(village.id) && (
-              <button onClick={() => { setPreselectedFatherId(undefined); setShowAddForm(true); }} className="flex items-center gap-2 rounded-lg bg-cedar px-3 py-2.5 text-sm font-semibold text-white hover:bg-cedar/90 transition shadow-sm">
-                <UserPlus size={16} /> {t('addPeople')}
-              </button>
-            )}
+    <main className="min-h-[calc(100vh-4rem)] flex flex-col">
+      {/* Village header */}
+      <section className="shrink-0 border-b border-cedar/15 bg-hero-gradient px-4 py-5 md:px-6 relative overflow-hidden">
+        {/* Subtle pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23c9a84c' stroke-width='0.5'%3E%3Cpath d='M30 0L60 30L30 60L0 30z'/%3E%3C/g%3E%3C/svg%3E")`,
+        }} />
+        
+        <div className="relative">
+          <Link to="/" className="inline-flex items-center gap-2 rounded-md py-1 text-sm font-semibold text-cedar hover:text-brass transition">
+            <ArrowLeft size={16} /> {t('backToVillages')}
+          </Link>
+          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="mt-1 pb-1 text-2xl sm:text-3xl font-serif font-bold flex flex-wrap gap-2 sm:gap-3 items-baseline text-gold-gradient">
+                {getLocalizedName(village, language)} 
+                {language !== 'ur' && village.urdu_name && <span className="text-xl sm:text-2xl text-jade font-medium" lang="ur" dir="rtl">{village.urdu_name}</span>}
+                {language !== 'hi' && village.hindi_name && <span className="text-xl sm:text-2xl text-jade font-medium">{village.hindi_name}</span>}
+              </h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <ViewSwitcher current={view} onChange={handleViewChange} />
+              {canEditVillage(village.id) && (
+                <button onClick={() => { setPreselectedFatherId(undefined); setShowAddForm(true); }} className="flex items-center gap-2 rounded-lg bg-cedar/90 px-3 py-2.5 text-sm font-semibold text-onyx hover:bg-cedar transition shadow-sm">
+                  <UserPlus size={16} /> {t('addPeople')}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="flex-1 p-4 lg:p-6 overflow-hidden">
+      <div className="bg-cedar/10 border-y sm:border sm:rounded-xl border-cedar/20 px-4 py-3 sm:mx-6 sm:mt-4 flex items-start gap-3">
+        <Info size={18} className="text-cedar shrink-0 mt-0.5" />
+        <p className="text-sm text-cedar-dark leading-relaxed font-medium">
+          {t('addGuidance')}
+        </p>
+      </div>
+
+      <section className="flex-1 p-4 lg:p-6 overflow-hidden bg-paper">
         {view === "canvas" && <TreeView 
           rootNode={treeRoot} 
           allPeople={people} 

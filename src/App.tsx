@@ -9,6 +9,8 @@ import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import SearchPage from "./pages/SearchPage";
 import VillagePage from "./pages/VillagePage";
+import FixGenerations from "./pages/FixGenerations";
+import AboutPage from "./pages/AboutPage";
 
 export default function App() {
   return (
@@ -19,8 +21,10 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/village/:slug" element={<VillagePage />} />
+            <Route path="/fix-gen" element={<FixGenerations />} />
             <Route
               path="/admin"
               element={

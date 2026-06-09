@@ -62,55 +62,61 @@ export default function PersonDetailsPanel({ person, father, childrenCount, onCl
     return parts.join(" s/o ");
   };
 
+  const editInputClass = "w-full text-sm border border-ink/10 rounded-lg px-3 py-2 outline-none transition focus:border-cedar focus:ring-2 focus:ring-cedar/15 bg-white/80";
+
   return (
-    <aside className="w-full lg:w-80 bg-white border border-ink/10 rounded-xl shadow-sm overflow-hidden flex flex-col h-full max-h-[500px]">
-      <div className="p-4 border-b border-ink/10 flex justify-between items-start bg-ink/5 relative group">
-        {!isEditing ? (
+    <>
+      <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm z-40 lg:hidden" onClick={onClose} />
+      <aside className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-archival overflow-hidden flex flex-col h-[70vh] lg:relative lg:inset-auto lg:z-auto lg:rounded-xl lg:w-80 lg:h-full lg:max-h-[500px] lg:border lg:border-ink/8">
+        <div className="p-4 border-b border-cedar/10 flex justify-between items-start bg-gradient-to-r from-onyx to-ink relative group">
+          {!isEditing ? (
           <>
             <div>
-              <h2 className="text-xl font-bold text-ink pr-6">{getLocalizedName(person, language)}</h2>
-              {language !== "ur" && person.urdu_name && <p className="text-cedar font-medium mt-1" dir="rtl" lang="ur">{person.urdu_name}</p>}
-              {language !== "hi" && person.hindi_name && <p className="text-cedar font-medium mt-1">{person.hindi_name}</p>}
+              <h2 className="text-xl font-serif font-bold text-white/90 pr-6">{getLocalizedName(person, language)}</h2>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                {language !== "ur" && person.urdu_name && <span className="text-emerald font-medium text-sm" dir="rtl" lang="ur">{person.urdu_name}</span>}
+                {language !== "hi" && person.hindi_name && <span className="text-emerald font-medium text-sm">{person.hindi_name}</span>}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
                 <button 
                   onClick={() => setIsEditing(true)} 
-                  className="p-1.5 text-ink/50 hover:text-cedar hover:bg-white rounded-md transition"
+                  className="p-1.5 text-white/40 hover:text-cedar hover:bg-white/10 rounded-md transition"
                   title={t('edit')}
                 >
                   <Edit2 size={16} />
                 </button>
               )}
-              <button onClick={onClose} className="p-1.5 hover:bg-ink/10 rounded-full transition"><X size={18}/></button>
+              <button onClick={onClose} className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition"><X size={18}/></button>
             </div>
           </>
         ) : (
           <div className="w-full space-y-3">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-bold text-ink/50 uppercase tracking-wider">{t('edit')}</h2>
+              <h2 className="text-sm font-bold text-white/50 uppercase tracking-wider">{t('edit')}</h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => setIsEditing(false)} className="px-2 py-1 text-xs font-medium text-ink/60 hover:bg-ink/10 rounded">{t('cancel')}</button>
+                <button onClick={() => setIsEditing(false)} className="px-2 py-1 text-xs font-medium text-white/50 hover:bg-white/10 rounded">{t('cancel')}</button>
                 <button 
                   onClick={handleSave} 
                   disabled={isSaving || !editName.trim()}
-                  className="px-2 py-1 text-xs font-medium text-white bg-cedar hover:bg-cedar/90 rounded disabled:opacity-50 flex items-center gap-1"
+                  className="px-2 py-1 text-xs font-medium text-onyx bg-cedar hover:bg-brass rounded disabled:opacity-50 flex items-center gap-1 transition"
                 >
                   {isSaving ? "..." : <><Check size={14} /> {t('save')}</>}
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink/60 mb-1">{t('englishName')}</label>
-              <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full text-sm border border-ink/20 rounded px-2 py-1.5 outline-none focus:border-cedar" autoFocus />
+              <label className="block text-xs font-medium text-white/40 mb-1">{t('englishName')}</label>
+              <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className={editInputClass} autoFocus />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink/60 mb-1">{t('urduName')}</label>
-              <input type="text" value={editUrduName} onChange={e => setEditUrduName(e.target.value)} className="w-full text-sm border border-ink/20 rounded px-2 py-1.5 outline-none focus:border-cedar" dir="rtl" lang="ur" />
+              <label className="block text-xs font-medium text-white/40 mb-1">{t('urduName')}</label>
+              <input type="text" value={editUrduName} onChange={e => setEditUrduName(e.target.value)} className={editInputClass} dir="rtl" lang="ur" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink/60 mb-1">{t('hindiName')}</label>
-              <input type="text" value={editHindiName} onChange={e => setEditHindiName(e.target.value)} className="w-full text-sm border border-ink/20 rounded px-2 py-1.5 outline-none focus:border-cedar" />
+              <label className="block text-xs font-medium text-white/40 mb-1">{t('hindiName')}</label>
+              <input type="text" value={editHindiName} onChange={e => setEditHindiName(e.target.value)} className={editInputClass} />
             </div>
           </div>
         )}
@@ -119,26 +125,27 @@ export default function PersonDetailsPanel({ person, father, childrenCount, onCl
 
         {person.generation != null && (
           <div>
-            <h3 className="text-ink/50 font-semibold uppercase text-xs tracking-wider">{t('generation')}</h3>
-            <p className="mt-1 font-medium">{person.generation}</p>
+            <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider">{t('generation')}</h3>
+            <p className="mt-1 font-medium text-ink">{person.generation}</p>
           </div>
         )}
         {allPeople && (
           <div>
-            <h3 className="text-ink/50 font-semibold uppercase text-xs tracking-wider">{t('genealogy')}</h3>
-            <p className="mt-1 font-medium">{getLineageString()}</p>
+            <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider">{t('genealogy')}</h3>
+            <p className="mt-1 font-medium text-ink">{getLineageString()}</p>
           </div>
         )}
         <div>
-          <h3 className="text-ink/50 font-semibold uppercase text-xs tracking-wider">{t('father')}</h3>
-          <p className="mt-1 font-medium">{father ? `${getLocalizedName(father, language)} ${language !== 'ur' && father.urdu_name ? `(${father.urdu_name})` : ''}` : t('unknownRoot')}</p>
+          <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider">{t('father')}</h3>
+          <p className="mt-1 font-medium text-ink">{father ? `${getLocalizedName(father, language)} ${language !== 'ur' && father.urdu_name ? `(${father.urdu_name})` : ''}` : t('unknownRoot')}</p>
         </div>
         <div>
-          <h3 className="text-ink/50 font-semibold uppercase text-xs tracking-wider">{t('childrenCount')}</h3>
-          <p className="mt-1 font-medium">{childrenCount}</p>
+          <h3 className="text-cedar/70 font-semibold uppercase text-xs tracking-wider">{t('childrenCount')}</h3>
+          <p className="mt-1 font-medium text-ink">{childrenCount}</p>
         </div>
 
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

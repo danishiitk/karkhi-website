@@ -16,17 +16,17 @@ const views: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
 
 export default function ViewSwitcher({ current, onChange }: ViewSwitcherProps) {
   return (
-    <div className="flex rounded-xl bg-ink/5 p-1">
+    <div className="flex rounded-xl bg-onyx/80 p-1 border border-white/10 backdrop-blur-sm">
       {views.map((v) => (
         <button
           key={v.mode}
           type="button"
           onClick={() => onChange(v.mode)}
           className={[
-            "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition",
+            "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200",
             current === v.mode
-              ? "bg-white text-cedar shadow-sm"
-              : "text-ink/45 hover:text-ink/70"
+              ? "bg-cedar/90 text-onyx shadow-sm shadow-cedar/20"
+              : "text-white/40 hover:text-white/70 hover:bg-white/5"
           ].join(" ")}
         >
           {v.icon}

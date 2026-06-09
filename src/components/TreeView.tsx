@@ -100,7 +100,7 @@ function TreeViewInner({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdate
             source: node.id,
             target: child.id,
             type: "tree",
-            style: { stroke: "#94a3b8", strokeWidth: 1.5 }
+            style: { stroke: "#2d6a4f", strokeWidth: 1.5, opacity: 0.5 }
           });
         }
       }
@@ -127,17 +127,19 @@ function TreeViewInner({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdate
   const selectedPerson = useMemo(() => allPeople.find(p => p.id === selectedId) || null, [selectedId, allPeople]);
   const selectedFather = useMemo(() => allPeople.find(p => p.id === selectedPerson?.father_id) || null, [selectedPerson, allPeople]);
 
-  if (!rootNode) return <div className="flex h-full items-center justify-center text-ink/60">Tree empty.</div>;
+  if (!rootNode) return <div className="flex h-full items-center justify-center text-ink/50 font-medium">Tree empty.</div>;
+
+  const controlBtnClass = "p-2 bg-onyx/80 backdrop-blur-sm rounded-lg shadow-glass border border-white/10 text-white/60 hover:text-emerald hover:bg-onyx transition-all";
 
   return (
     <div className="flex h-full flex-col lg:flex-row gap-4">
-      <div className="relative flex-1 bg-white rounded-xl border border-ink/10 shadow-sm overflow-hidden min-h-[500px]">
+      <div className="relative flex-1 bg-white rounded-xl border border-ink/8 shadow-sm overflow-hidden min-h-[500px]">
         <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <button onClick={() => zoomIn()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ZoomIn size={18}/></button>
-          <button onClick={() => zoomOut()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ZoomOut size={18}/></button>
-          <button onClick={() => fitView()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><Maximize2 size={18}/></button>
-          <button onClick={expandAll} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ChevronsUpDown size={18}/></button>
-          <button onClick={collapseAll} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ChevronsDownUp size={18}/></button>
+          <button onClick={() => zoomIn()} className={controlBtnClass}><ZoomIn size={18}/></button>
+          <button onClick={() => zoomOut()} className={controlBtnClass}><ZoomOut size={18}/></button>
+          <button onClick={() => fitView()} className={controlBtnClass}><Maximize2 size={18}/></button>
+          <button onClick={expandAll} className={controlBtnClass}><ChevronsUpDown size={18}/></button>
+          <button onClick={collapseAll} className={controlBtnClass}><ChevronsDownUp size={18}/></button>
         </div>
         <ReactFlow
           nodes={nodes}
@@ -148,7 +150,7 @@ function TreeViewInner({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdate
           fitView
           minZoom={0.1}
         >
-          <Background color="#bfdbfe" gap={22} variant={BackgroundVariant.Dots} />
+          <Background color="#2d6a4f30" gap={22} variant={BackgroundVariant.Dots} />
         </ReactFlow>
       </div>
       <PersonDetailsPanel 
@@ -165,7 +167,7 @@ function TreeViewInner({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdate
 
 export default function TreeView({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdated }: { rootNode: DisplayTreeNode | null, allPeople: Person[], canEdit?: boolean, onAddNode?: (id: string) => void, onPersonUpdated?: () => void }) {
   return (
-    <div className="w-full h-full bg-paper rounded-xl overflow-hidden border border-ink/10 relative shadow-inner">
+    <div className="w-full h-full bg-paper rounded-xl overflow-hidden border border-ink/8 relative shadow-inner">
       <ReactFlowProvider>
         <TreeViewInner rootNode={rootNode} allPeople={allPeople} canEdit={canEdit} onAddNode={onAddNode} onPersonUpdated={onPersonUpdated} />
       </ReactFlowProvider>
