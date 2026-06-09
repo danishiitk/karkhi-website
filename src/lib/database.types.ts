@@ -81,6 +81,7 @@ export type Database = {
           role?: UserRole;
           assigned_village_id?: string | null;
         };
+        Relationships: [];
       };
       villages: {
         Row: Village;
@@ -91,7 +92,6 @@ export type Database = {
           urdu_name: string;
           hindi_name?: string | null;
           alternate_spellings?: string[];
-
         };
         Update: {
           id?: string;
@@ -100,8 +100,8 @@ export type Database = {
           urdu_name?: string;
           hindi_name?: string | null;
           alternate_spellings?: string[];
-
         };
+        Relationships: [];
       };
       people: {
         Row: Person;
@@ -114,7 +114,6 @@ export type Database = {
           village_id: string;
           generation?: number | null;
           is_placeholder?: boolean;
-
           added_by?: string | null;
         };
         Update: {
@@ -126,9 +125,9 @@ export type Database = {
           village_id?: string;
           generation?: number | null;
           is_placeholder?: boolean;
-
           added_by?: string | null;
         };
+        Relationships: [];
       };
     };
     Functions: {
@@ -141,7 +140,8 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      user_role: UserRole;
+      confidence_level: "high" | "medium" | "low";
     };
     CompositeTypes: {
       [_ in never]: never;
