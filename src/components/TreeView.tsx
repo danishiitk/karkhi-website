@@ -1,327 +1,174 @@
-import {
-  Background,
-  BackgroundVariant,
-  MarkerType,
-  ReactFlow,
-  ReactFlowProvider,
-  useReactFlow,
-  type Edge,
-  type NodeTypes
-} from "@xyflow/react";
-import {
-  ChevronsDownUp,
-  ChevronsUpDown,
-  Maximize2,
-  Search,
-  ZoomIn,
-  ZoomOut
-} from "lucide-react";
+import { Background, BackgroundVariant, ReactFlow, ReactFlowProvider, MarkerType, type NodeTypes, type EdgeTypes, type Node, type Edge, useReactFlow } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  getChildren,
-  getPersonById,
-  type DisplayTreeNode,
-  type Person,
-  type VillageDisplayTree
-} from "../data/familyTrees";
-import PersonDetailsPanel from "./PersonDetailsPanel";
 import PersonNode, { type PersonFlowNode } from "./PersonNode";
+import PersonDetailsPanel from "./PersonDetailsPanel";
+import type { DisplayTreeNode, Person } from "../types";
+import { Maximize2, ZoomIn, ZoomOut, ChevronsUpDown, ChevronsDownUp } from "lucide-react";
 
-const nodeTypes: NodeTypes = {
-  person: PersonNode
-};
+import TreeEdge from "./TreeEdge";
 
-type PositionedPerson = {
-  person: Person;
-  x: number;
-  y: number;
-  hiddenChildrenCount: number;
-};
+const nodeTypes: NodeTypes = { person: PersonNode };
+const edgeTypes: EdgeTypes = { tree: TreeEdge };
 
-type TreeViewProps = {
-  displayTree: VillageDisplayTree;
-};
-
-const horizontalSpacing = 300;
-const verticalSpacing = 172;
-
-function getAllTreeIds(node: DisplayTreeNode): string[] {
-  return [node.id, ...node.children.flatMap(getAllTreeIds)];
+function getAllIds(node: DisplayTreeNode): string[] {
+  return [node.id, ...node.children.flatMap(getAllIds)];
 }
 
-function getExpandableIds(node: DisplayTreeNode): string[] {
-  return [
-    ...(node.children.length > 0 ? [node.id] : []),
-    ...node.children.flatMap(getExpandableIds)
-  ];
-}
-
-function hasSearchMatch(person: Person, query: string): boolean {
-  if (!query) {
-    return true;
-  }
-
-  const searchText = `${person.name} ${person.urduName ?? ""}`.toLowerCase();
-  return searchText.includes(query);
-}
-
-function getLineage(person: Person | null): Person[] {
-  const lineage: Person[] = person ? [person] : [];
-  let currentFatherId = person?.fatherId;
-
-  while (currentFatherId) {
-    const ancestor = getPersonById(currentFatherId);
-    if (!ancestor) {
-      break;
-    }
-
-    lineage.push(ancestor);
-    currentFatherId = ancestor.fatherId;
-  }
-
-  return lineage;
-}
-
-function createLayout(
-  root: DisplayTreeNode,
-  collapsedIds: Set<string>,
-  searchQuery: string
-) {
-  const positions: PositionedPerson[] = [];
-  let leafIndex = 0;
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const searchIsActive = normalizedQuery.length > 0;
-
-  const walk = (node: DisplayTreeNode, depth: number): number => {
-    const isCollapsed = collapsedIds.has(node.id) && !searchIsActive;
-    const visibleChildren = isCollapsed ? [] : node.children;
-
-    if (visibleChildren.length === 0) {
-      const x = leafIndex * horizontalSpacing;
-      leafIndex += 1;
-      positions.push({
-        person: node,
-        x,
-        y: depth * verticalSpacing,
-        hiddenChildrenCount: isCollapsed ? node.children.length : 0
-      });
-      return x;
-    }
-
-    const childXPositions = visibleChildren.map((child) => walk(child, depth + 1));
-    const x = childXPositions.reduce((total, childX) => total + childX, 0) / childXPositions.length;
-    positions.push({
-      person: node,
-      x,
-      y: depth * verticalSpacing,
-      hiddenChildrenCount: 0
-    });
-    return x;
-  };
-
-  walk(root, 0);
-
-  const minX = Math.min(...positions.map((position) => position.x));
-  const centered = positions.map((position) => ({
-    ...position,
-    x: position.x - minX
-  }));
-
-  return centered;
-}
-
-function TreeViewInner({ displayTree }: TreeViewProps) {
-  const [selectedId, setSelectedId] = useState(displayTree.root.id);
-  const [searchQuery, setSearchQuery] = useState("");
+function TreeViewInner({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdated }: { rootNode: DisplayTreeNode | null, allPeople: Person[], canEdit?: boolean, onAddNode?: (id: string) => void, onPersonUpdated?: () => void }) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [selectedId, setSelectedId] = useState<string>("");
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
-  useEffect(() => {
-    setSelectedId(displayTree.root.id);
-    setSearchQuery("");
-    setCollapsedIds(new Set());
-  }, [displayTree.root.id]);
-
-  const allIds = useMemo(() => getAllTreeIds(displayTree.root), [displayTree.root]);
-  const expandableIds = useMemo(() => getExpandableIds(displayTree.root), [displayTree.root]);
-  const activeQuery = searchQuery.trim().toLowerCase();
-
-  const visiblePositions = useMemo(
-    () => createLayout(displayTree.root, collapsedIds, searchQuery),
-    [collapsedIds, displayTree.root, searchQuery]
-  );
-
-  const visibleIds = useMemo(
-    () => new Set(visiblePositions.map((position) => position.person.id)),
-    [visiblePositions]
-  );
-
-  const nodes = useMemo<PersonFlowNode[]>(() => {
-    return visiblePositions.map((position) => {
-      const isMatch = activeQuery ? hasSearchMatch(position.person, activeQuery) : false;
-      const hasAnyMatch =
-        !activeQuery ||
-        allIds.some((id) => {
-          const person = getPersonById(id);
-          if (!person) {
-            return false;
-          }
-          const searchText = `${person.name} ${person.urduName ?? ""}`.toLowerCase();
-          return searchText.includes(activeQuery);
-        });
-
-      return {
-        id: position.person.id,
-        type: "person",
-        position: {
-          x: position.x,
-          y: position.y
-        },
-        data: {
-          person: position.person,
-          childrenCount: getChildren(position.person.id).length,
-          isCollapsed: position.hiddenChildrenCount > 0,
-          isDimmed: Boolean(activeQuery && hasAnyMatch && !isMatch),
-          isMatch
-        }
-      };
+  const toggleCollapse = useCallback((id: string) => {
+    setCollapsedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-  }, [activeQuery, allIds, visiblePositions]);
-
-  const edges = useMemo<Edge[]>(() => {
-    return nodes
-      .filter((node) => node.data.person.fatherId && visibleIds.has(node.data.person.fatherId))
-      .map((node) => ({
-        id: `${node.data.person.fatherId}-${node.id}`,
-        source: node.data.person.fatherId!,
-        target: node.id,
-        type: "smoothstep",
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: "#0369a1"
-        },
-        style: {
-          stroke: "#0369a1",
-          strokeWidth: 2.2
-        }
-      }));
-  }, [nodes, visibleIds]);
-
-  const selectedPerson = selectedId ? getPersonById(selectedId) ?? null : null;
-  const selectedFather = selectedPerson?.fatherId ? getPersonById(selectedPerson.fatherId) ?? null : null;
-  const selectedLineage = getLineage(selectedPerson);
-  const selectedChildrenCount = selectedPerson ? getChildren(selectedPerson.id).length : 0;
-  const isCollapsed = collapsedIds.size > 0;
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      fitView({ padding: 0.25, duration: 300 });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [fitView, nodes.length, searchQuery, collapsedIds]);
-
-  const collapseAll = useCallback(() => {
-    setCollapsedIds(new Set(expandableIds));
-  }, [expandableIds]);
-
-  const expandAll = useCallback(() => {
-    setCollapsedIds(new Set());
   }, []);
 
+  const expandAll = () => setCollapsedIds(new Set());
+  const collapseAll = () => {
+    if (!rootNode) return;
+    const all = new Set(getAllIds(rootNode).filter(id => id !== rootNode.id));
+    setCollapsedIds(all);
+  };
+
+  const { nodes, edges } = useMemo(() => {
+    if (!rootNode) return { nodes: [], edges: [] };
+    const ns: Node[] = [];
+    const es: Edge[] = [];
+    const horizontalSpacing = 280;
+    const verticalSpacing = 180;
+    const nodeWidth = 256;
+
+    // Returns { width, center }
+    function traverse(node: DisplayTreeNode, x: number, y: number, isHidden: boolean): { width: number, center: number } {
+      if (isHidden) return { width: 0, center: 0 };
+      const isCollapsed = collapsedIds.has(node.id);
+      
+      let width = 0;
+      const childCenters: number[] = [];
+      
+      if (!isCollapsed && node.children.length > 0) {
+        let currentX = x;
+        for (const child of node.children) {
+          const res = traverse(child, currentX, y + verticalSpacing, false);
+          childCenters.push(res.center);
+          currentX += res.width + 20; // gap
+          width += res.width + 20;
+        }
+        width -= 20; // remove last gap
+      } else {
+        // traverse them as hidden to count them if needed
+        for (const child of node.children) traverse(child, 0, 0, true);
+        width = horizontalSpacing;
+      }
+
+      width = Math.max(horizontalSpacing, width);
+      
+      let center: number;
+      if (childCenters.length > 0) {
+        center = (childCenters[0] + childCenters[childCenters.length - 1]) / 2;
+      } else {
+        center = x + width / 2;
+      }
+      
+      const finalX = center - nodeWidth / 2;
+      
+      ns.push({
+        id: node.id,
+        type: "person",
+        position: { x: finalX, y },
+        data: {
+          person: node,
+          childrenCount: node.children.length,
+          isCollapsed,
+          isDimmed: false,
+          isMatch: false,
+          canEdit,
+          onToggle: () => toggleCollapse(node.id),
+          onAddNode: onAddNode ? () => onAddNode(node.id) : undefined
+        }
+      });
+
+      if (!isCollapsed) {
+        for (const child of node.children) {
+          es.push({
+            id: `e-${node.id}-${child.id}`,
+            source: node.id,
+            target: child.id,
+            type: "tree",
+            style: { stroke: "#94a3b8", strokeWidth: 1.5 }
+          });
+        }
+      }
+      return { width, center };
+    }
+    
+    // Position root
+    const rootLayout = traverse(rootNode, 0, 0, false);
+    
+    // Shift all nodes to center root around 0
+    const shiftX = -rootLayout.center;
+    for (const n of ns) {
+      n.position.x += shiftX;
+    }
+
+    return { nodes: ns, edges: es };
+  }, [rootNode, collapsedIds, toggleCollapse]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fitView({ padding: 0.2 }), 50);
+    return () => clearTimeout(timer);
+  }, [nodes.length, fitView]);
+
+  const selectedPerson = useMemo(() => allPeople.find(p => p.id === selectedId) || null, [selectedId, allPeople]);
+  const selectedFather = useMemo(() => allPeople.find(p => p.id === selectedPerson?.father_id) || null, [selectedPerson, allPeople]);
+
+  if (!rootNode) return <div className="flex h-full items-center justify-center text-ink/60">Tree empty.</div>;
+
   return (
-    <div className="grid gap-3 lg:h-full lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
-      <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-ink/10 bg-white/72 shadow-archival">
-        <div className="flex flex-col gap-3 border-b border-ink/10 p-3 md:flex-row md:items-center md:justify-between">
-          <label className="relative min-w-0 flex-1 md:max-w-sm">
-            <span className="sr-only">Search people by name</span>
-            <Search
-              aria-hidden="true"
-              size={18}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/45"
-            />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search people"
-              className="h-11 w-full rounded-md border border-ink/10 bg-white pl-10 pr-3 text-sm text-ink outline-none transition placeholder:text-ink/45 focus:border-cedar focus:ring-2 focus:ring-cedar/20"
-            />
-          </label>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              aria-label="Zoom in"
-              title="Zoom in"
-              onClick={() => zoomIn({ duration: 200 })}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-ink/10 bg-white text-ink transition hover:bg-ink/5 focus:outline-none focus:ring-2 focus:ring-cedar"
-            >
-              <ZoomIn aria-hidden="true" size={18} />
-            </button>
-            <button
-              type="button"
-              aria-label="Zoom out"
-              title="Zoom out"
-              onClick={() => zoomOut({ duration: 200 })}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-ink/10 bg-white text-ink transition hover:bg-ink/5 focus:outline-none focus:ring-2 focus:ring-cedar"
-            >
-              <ZoomOut aria-hidden="true" size={18} />
-            </button>
-            <button
-              type="button"
-              aria-label="Fit view"
-              title="Fit view"
-              onClick={() => fitView({ padding: 0.25, duration: 300 })}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-ink/10 bg-white text-ink transition hover:bg-ink/5 focus:outline-none focus:ring-2 focus:ring-cedar"
-            >
-              <Maximize2 aria-hidden="true" size={18} />
-            </button>
-            <button
-              type="button"
-              aria-label={isCollapsed ? "Expand all" : "Collapse all"}
-              title={isCollapsed ? "Expand all" : "Collapse all"}
-              onClick={isCollapsed ? expandAll : collapseAll}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-ink/10 bg-white text-ink transition hover:bg-ink/5 focus:outline-none focus:ring-2 focus:ring-cedar"
-            >
-              {isCollapsed ? (
-                <ChevronsUpDown aria-hidden="true" size={18} />
-              ) : (
-                <ChevronsDownUp aria-hidden="true" size={18} />
-              )}
-            </button>
-          </div>
+    <div className="flex h-full flex-col lg:flex-row gap-4">
+      <div className="relative flex-1 bg-white rounded-xl border border-ink/10 shadow-sm overflow-hidden min-h-[500px]">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button onClick={() => zoomIn()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ZoomIn size={18}/></button>
+          <button onClick={() => zoomOut()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ZoomOut size={18}/></button>
+          <button onClick={() => fitView()} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><Maximize2 size={18}/></button>
+          <button onClick={expandAll} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ChevronsUpDown size={18}/></button>
+          <button onClick={collapseAll} className="p-2 bg-white rounded-lg shadow border border-ink/10 hover:bg-ink/5"><ChevronsDownUp size={18}/></button>
         </div>
-        <div className="h-[34rem] min-h-[30rem] w-full lg:h-auto lg:min-h-0 lg:flex-1">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            fitView
-            minZoom={0.28}
-            maxZoom={1.5}
-            nodesDraggable={false}
-            nodesConnectable={false}
-            elementsSelectable
-            onNodeClick={(_, node) => setSelectedId(node.id)}
-          >
-            <Background color="#bfdbfe" gap={22} size={1.5} variant={BackgroundVariant.Dots} />
-          </ReactFlow>
-        </div>
-      </section>
-      <PersonDetailsPanel
-        person={selectedPerson}
-        father={selectedFather}
-        childrenCount={selectedChildrenCount}
-        lineage={selectedLineage}
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodeClick={(_, node) => setSelectedId(node.id)}
+          fitView
+          minZoom={0.1}
+        >
+          <Background color="#bfdbfe" gap={22} variant={BackgroundVariant.Dots} />
+        </ReactFlow>
+      </div>
+      <PersonDetailsPanel 
+        person={selectedPerson} 
+        father={selectedFather} 
+        childrenCount={allPeople.filter(p => p.father_id === selectedId).length}
         onClose={() => setSelectedId("")}
+        allPeople={allPeople}
+        onUpdated={onPersonUpdated}
       />
     </div>
   );
 }
 
-export default function TreeView({ displayTree }: TreeViewProps) {
+export default function TreeView({ rootNode, allPeople, canEdit, onAddNode, onPersonUpdated }: { rootNode: DisplayTreeNode | null, allPeople: Person[], canEdit?: boolean, onAddNode?: (id: string) => void, onPersonUpdated?: () => void }) {
   return (
-    <ReactFlowProvider>
-      <TreeViewInner displayTree={displayTree} />
-    </ReactFlowProvider>
+    <div className="w-full h-full bg-paper rounded-xl overflow-hidden border border-ink/10 relative shadow-inner">
+      <ReactFlowProvider>
+        <TreeViewInner rootNode={rootNode} allPeople={allPeople} canEdit={canEdit} onAddNode={onAddNode} onPersonUpdated={onPersonUpdated} />
+      </ReactFlowProvider>
+    </div>
   );
 }

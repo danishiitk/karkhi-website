@@ -1,7 +1,9 @@
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
-import { GitBranch, UserRound } from "lucide-react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { GitBranch, UserRound, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import type { Person } from "../types";
-import { ConfidenceBadge, VerificationBadge } from "./ConfidenceBadge";
+
+import { useLanguage } from "../contexts/LanguageContext";
+import { getLocalizedName } from "../lib/i18n";
 
 export type PersonNodeData = {
   person: Person;
@@ -9,78 +11,63 @@ export type PersonNodeData = {
   isCollapsed: boolean;
   isDimmed: boolean;
   isMatch: boolean;
+  canEdit?: boolean;
+  onToggle: () => void;
+  onAddNode?: () => void;
 };
 
-export type PersonFlowNode = Node<PersonNodeData, "person">;
+import type { Node } from "@xyflow/react";
 
+export type PersonFlowNode = Node<PersonNodeData, "person">;
 export default function PersonNode({ data, selected }: NodeProps<PersonFlowNode>) {
-  const confidence = data.person.source?.confidence ?? "low";
+  const { language } = useLanguage();
+  const p = data.person;
+  const displayName = getLocalizedName(p, language);
 
   return (
-    <div
-      role="button"
-      aria-label={`Open details for ${data.person.name}`}
-      className={[
-        "group relative w-64 rounded-lg border bg-white px-4 py-3 text-left shadow-archival transition",
-        selected ? "border-madder ring-2 ring-madder/20" : "border-ink/12",
-        data.isMatch ? "outline outline-2 outline-brass" : "",
-        data.isDimmed ? "opacity-40" : "opacity-100"
-      ].join(" ")}
-    >
-      <Handle
-        className="!h-2 !w-2 !border-0 !bg-cedar/70"
-        type="target"
-        position={Position.Top}
-      />
-      <div className="flex items-start gap-3">
-        <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-mist text-cedar">
-          {data.person.isPlaceholder ? (
-            <GitBranch aria-hidden="true" size={18} />
-          ) : (
-            <UserRound aria-hidden="true" size={18} />
-          )}
+    <div className={`relative w-64 bg-white rounded-xl shadow-archival border transition-all ${selected ? "border-cedar ring-2 ring-cedar/20" : "border-ink/10"} ${data.isDimmed ? "opacity-50" : "opacity-100"} ${data.isMatch ? "outline outline-4 outline-brass/50" : ""}`}>
+      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-cedar !border-2 !border-white" />
+      
+      <div className="p-4 flex gap-3 items-start">
+        <div className="w-10 h-10 shrink-0 rounded-full bg-mist text-cedar flex items-center justify-center">
+          {p.is_placeholder ? <GitBranch size={20}/> : <UserRound size={20}/>}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="break-words text-sm font-semibold leading-5 text-ink">
-            {data.person.name}
-          </p>
-          {data.person.urduName ? (
-            <p className="mt-1 break-words text-sm leading-6 text-cedar" lang="ur" dir="rtl">
-              {data.person.urduName}
-            </p>
-          ) : null}
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-ink truncate">{displayName}</div>
+          {language !== "ur" && p.urdu_name && <div className="text-sm text-cedar font-medium truncate text-left" dir="rtl" lang="ur">{p.urdu_name}</div>}
+          {language !== "hi" && p.hindi_name && <div className="text-sm text-cedar font-medium truncate text-left">{p.hindi_name}</div>}
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <ConfidenceBadge confidence={confidence} compact />
-        {data.person.isPlaceholder ? (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[0.68rem] font-semibold text-ink/70">
-            Branch
-          </span>
-        ) : data.person.generation ? (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[0.68rem] font-semibold text-ink/70">
-            Gen {data.person.generation}
-          </span>
-        ) : null}
-        {data.childrenCount > 0 ? (
-          <span className="rounded-full bg-cedar/10 px-2 py-0.5 text-[0.68rem] font-semibold text-cedar">
-            {data.childrenCount} child{data.childrenCount === 1 ? "" : "ren"}
-          </span>
-        ) : null}
-        {data.isCollapsed ? (
-          <span className="rounded-full bg-madder/10 px-2 py-0.5 text-[0.68rem] font-semibold text-madder">
-            Collapsed
-          </span>
-        ) : null}
+
+      <div className="px-4 pb-4 flex items-center justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          {p.generation != null && <span className="text-[10px] bg-ink/5 px-2 py-0.5 rounded-full font-medium">Gen {p.generation}</span>}
+        </div>
+
+        {data.canEdit && data.onAddNode && !p.is_placeholder && (
+          <button
+            onClick={(e) => { e.stopPropagation(); data.onAddNode!(); }}
+            className="w-6 h-6 bg-white border border-ink/10 text-cedar hover:text-white hover:bg-cedar rounded-full shadow-sm flex items-center justify-center transition-colors"
+            title="Add Son"
+          >
+            <Plus size={14} />
+          </button>
+        )}
       </div>
-      <div className="mt-2">
-        <VerificationBadge confidence={confidence} />
-      </div>
-      <Handle
-        className="!h-2 !w-2 !border-0 !bg-cedar/70"
-        type="source"
-        position={Position.Bottom}
-      />
+
+      {data.childrenCount > 0 && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); data.onToggle(); }}
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white border border-ink/10 text-ink/50 hover:text-cedar rounded-full p-1 shadow-sm transition"
+        >
+          {data.isCollapsed ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
+          <span className="absolute -right-2 -top-2 bg-madder text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+            {data.childrenCount}
+          </span>
+        </button>
+      )}
+
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-cedar !border-2 !border-white" />
     </div>
   );
 }

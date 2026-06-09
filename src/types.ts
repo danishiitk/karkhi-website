@@ -1,7 +1,10 @@
+
 export type {
-  Confidence,
   DisplayTreeNode,
   Person,
-  VillageDisplayTree,
-  VillageTree
-} from "./data/familyTrees";
+  Village,
+  Profile,
+  UserRole,
+  LineageRow,
+  PersonInsert
+} from "./lib/database.types";

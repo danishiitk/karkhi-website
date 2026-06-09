@@ -1,75 +1,61 @@
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import VillageCard from "../components/VillageCard";
-import { villages } from "../data/familyTrees";
+import { fetchVillages } from "../lib/queries";
+import { useTranslation } from "../contexts/LanguageContext";
+import type { Village } from "../types";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  const [villages, setVillages] = useState<Village[]>([]);
+
+  useEffect(() => {
+    fetchVillages().then(setVillages).catch(console.error);
+  }, []);
+
   const normalizedQuery = query.trim().toLowerCase();
-
-  const filteredVillages = useMemo(() => {
-    if (!normalizedQuery) {
-      return villages;
-    }
-
-    return villages.filter((village) => {
-      const searchText = [
-        village.name,
-        village.urduName,
-        village.slug,
-        ...(village.alternateSpellings ?? [])
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return searchText.includes(normalizedQuery);
-    });
-  }, [normalizedQuery]);
+  const filteredVillages = villages.filter(v => {
+    if (!normalizedQuery) return true;
+    return `${v.name} ${v.urdu_name} ${v.alternate_spellings.join(" ")}`.toLowerCase().includes(normalizedQuery);
+  });
 
   return (
-    <main className="min-h-screen">
-      <section className="border-b border-ink/10 bg-white/55">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 md:px-8 lg:py-14">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase text-madder">Static lineage archive</p>
-            <h1 className="mt-3 text-4xl font-semibold leading-tight text-ink md:text-5xl">
-              Sheikh Hasan Family Tree
+    <main className="min-h-screen bg-paper pb-16">
+      <section className="bg-white border-b border-ink/10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-6 md:px-8 lg:py-8">
+          <div className="max-w-none">
+            <h1 className="text-3xl font-bold leading-tight text-ink md:text-4xl lg:text-5xl tracking-tight">
+              {t('mainTitle')}
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-ink/70">
-              Sheikh Hasan is shown as the known common ancestor, with village settlement trees
-              displayed below for reference. English names appear first and Urdu source names are
-              retained for verification.
+            <p className="mt-3 text-base text-ink/70">
+              {t('mainSubtitle')}
             </p>
           </div>
-          <label className="relative max-w-xl">
-            <span className="sr-only">Search villages</span>
-            <Search
-              aria-hidden="true"
-              size={20}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/45"
-            />
+          <div className="relative max-w-xl mt-2">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" />
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search villages"
-              className="h-12 w-full rounded-md border border-ink/10 bg-white pl-12 pr-4 text-base text-ink shadow-sm outline-none transition placeholder:text-ink/45 focus:border-cedar focus:ring-2 focus:ring-cedar/20"
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('filterVillages')}
+              className="w-full rounded-xl border border-ink/10 bg-ink/5 py-3 pl-11 pr-4 text-base outline-none transition focus:border-cedar focus:bg-white focus:ring-4 focus:ring-cedar/10"
             />
-          </label>
+          </div>
         </div>
       </section>
-      <section className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
-        {filteredVillages.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredVillages.map((village) => (
-              <VillageCard key={village.id} village={village} />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-ink/10 bg-white/82 p-6 text-ink/70 shadow-archival">
-            No villages match your search.
-          </div>
-        )}
+      
+      <section className="mx-auto max-w-6xl px-5 mt-6 md:px-8">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {filteredVillages.map(village => (
+            <VillageCard key={village.id} village={village} />
+          ))}
+          {filteredVillages.length === 0 && (
+            <div className="col-span-full py-12 text-center text-ink/60 bg-white rounded-2xl border border-ink/10">
+              {t('noVillagesMatch')}
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );
