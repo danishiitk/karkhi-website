@@ -49,7 +49,7 @@ export default function HomePage() {
             </p>
             <div className="mt-4 animate-fade-in-up-delay-2">
               <a 
-                href="https://cqtcehuvtncmkkcxbdqk.supabase.co/storage/v1/object/public/documents/Qureshi%20Shajrah%20(Shaikh%20Qureshi,%20Karkhi).pdf"
+                href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/Qureshi%20Shajrah%20(Shaikh%20Qureshi,%20Karkhi).pdf`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 hover:border-cedar/40 hover:bg-cedar/10 text-white hover:text-cedar rounded-xl font-bold transition-all group backdrop-blur-sm shadow-sm"
