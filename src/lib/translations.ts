@@ -9,6 +9,7 @@ export const translations = {
     admin: "Admin",
     villages: "Villages",
     about: "About Us",
+    search: "Search",
 
     // About Page
     aboutTitle: "Preserving Our Heritage",
@@ -31,7 +32,7 @@ export const translations = {
     registeredUsers: "Registered Users",
     filterVillages: "Filter villages by name or spelling...",
     noVillagesMatch: "No villages found matching your search.",
-    mainTitle: "Hazrat Sheikh Hasan Baba\nFamily Tree",
+    mainTitle: "Hazrat Sheikh Hasan\nBaba Family Tree",
     mainSubtitle: "A collaborative, digital archive mapping the descendants of Hazrat Sheikh Hasan Baba across various village branches.",
     originalShajrah: "View Original Shajrah (PDF)",
 
@@ -106,6 +107,7 @@ export const translations = {
     admin: "ایڈمن",
     villages: "گاؤں",
     about: "ہمارے بارے میں",
+    search: "تلاش کریں",
 
     // About Page
     aboutTitle: "ہماری وراثت کا تحفظ",
@@ -203,6 +205,7 @@ export const translations = {
     admin: "व्यवस्थापक",
     villages: "गांव",
     about: "हमारे बारे में",
+    search: "खोजें",
 
     // About Page
     aboutTitle: "हमारी विरासत का संरक्षण",

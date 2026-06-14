@@ -3,6 +3,7 @@ import type { Person, PersonInsert, Village, Profile, UserRole, LineageRow, Disp
 
 export type SearchResult = Person & {
   village_name: string;
+  village_slug: string;
   father_name: string | null;
 };
 
@@ -149,17 +150,21 @@ export async function enrichSearchResults(people: Person[]): Promise<SearchResul
 
   const [fathersResponse, villagesResponse] = await Promise.all([
     fatherIds.length > 0 ? supabase.from("people").select("id, name").in("id", fatherIds) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    villageIds.length > 0 ? supabase.from("villages").select("id, name").in("id", villageIds) : Promise.resolve({ data: [] as { id: string; name: string }[] })
+    villageIds.length > 0 ? supabase.from("villages").select("id, name, slug").in("id", villageIds) : Promise.resolve({ data: [] as { id: string; name: string; slug: string }[] })
   ]);
 
   const fathersMap = new Map(fathersResponse.data?.map((f) => [f.id, f.name]) || []);
-  const villagesMap = new Map(villagesResponse.data?.map((v) => [v.id, v.name]) || []);
+  const villagesMap = new Map(villagesResponse.data?.map((v) => [v.id, { name: v.name, slug: v.slug }]) || []);
 
-  return people.map((p) => ({
-    ...p,
-    father_name: p.father_id ? fathersMap.get(p.father_id) || null : null,
-    village_name: villagesMap.get(p.village_id) || "Unknown"
-  }));
+  return people.map((p) => {
+    const v = villagesMap.get(p.village_id);
+    return {
+      ...p,
+      father_name: p.father_id ? fathersMap.get(p.father_id) || null : null,
+      village_name: v?.name || "Unknown",
+      village_slug: v?.slug || ""
+    };
+  });
 }
 
 export async function fetchProfile(id: string): Promise<Profile | null> {
@@ -176,6 +181,11 @@ export async function fetchAllProfiles(): Promise<Profile[]> {
 
 export async function updateProfileRole(id: string, role: UserRole, assignedVillageId: string | null = null): Promise<void> {
   const { error } = await supabase.from("profiles").update({ role, assigned_village_id: assignedVillageId }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const { error } = await (supabase.rpc as any)("delete_user", { target_user_id: id });
   if (error) throw error;
 }
 

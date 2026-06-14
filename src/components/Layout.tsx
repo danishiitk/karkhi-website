@@ -1,4 +1,4 @@
-import { LogIn, LogOut, Search, Shield, TreePine, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Search, Shield, TreePine } from "lucide-react";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
@@ -16,8 +16,7 @@ export default function Layout() {
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const searchRef = useRef<HTMLFormElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -63,128 +62,80 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 glass-dark border-b border-cedar/20">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between w-full px-4 md:px-6">
+        <div className="mx-auto flex flex-wrap md:flex-nowrap min-h-16 max-w-7xl items-center justify-between w-full px-4 md:px-6 py-2 gap-3">
           {/* Logo */}
-          <Link to="/" className="flex shrink-0 items-center gap-2.5 text-cedar transition hover:text-brass group">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 text-cedar transition hover:text-brass group order-1">
             <div className="w-8 h-8 rounded-lg bg-cedar/15 flex items-center justify-center group-hover:bg-cedar/25 transition">
               <TreePine size={18} className="text-cedar" />
             </div>
             <span className="hidden text-sm font-bold text-white/90 sm:inline tracking-wide">Hazrat Sheikh Hasan Baba</span>
           </Link>
 
-          {/* Desktop Nav & Actions */}
-          <div className="hidden md:flex items-center gap-4">
-            <nav className="flex items-center gap-1">
-              <Link
-                to="/"
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isActive("/")
-                    ? "bg-cedar/15 text-cedar"
-                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
-                }`}
-              >
+          {/* Search Bar - Full width on mobile, auto on desktop */}
+          <div className="w-full md:w-auto order-3 md:order-2 md:flex-1 md:max-w-md md:mx-4 relative" ref={searchRef}>
+            <form onSubmit={handleSearch} className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+              <input
+                type="text"
+                placeholder={t('search')}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-cedar/50 focus:bg-white/10 transition"
+              />
+            </form>
+            {/* Dropdown for suggestions */}
+            {showDropdown && suggestions.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-onyx/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 py-2">
+                {suggestions.map(s => (
+                  <Link 
+                    key={s.id} 
+                    to={`/village/${s.village_slug}?view=lineage&select=${s.id}`}
+                    onClick={() => { setShowDropdown(false); setSearchQuery(""); }}
+                    className="flex flex-col px-4 py-2 hover:bg-white/5 transition border-b border-white/5 last:border-0"
+                  >
+                    <span className="font-medium text-sm text-white/90">{s.name}</span>
+                    <span className="text-xs text-white/50">{s.village_name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Nav & Actions */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar order-2 md:order-3 shrink-0 ml-auto md:ml-0">
+            <nav className="flex items-center gap-1 shrink-0">
+              <Link to="/" className={`px-2 py-1.5 text-sm font-medium transition rounded-lg ${isActive("/") ? "bg-cedar/15 text-cedar" : "text-white/70 hover:bg-white/5 hover:text-white"}`}>
                 {t('home')}
               </Link>
-              <Link
-                to="/about"
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isActive("/about")
-                    ? "bg-cedar/15 text-cedar"
-                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
-                }`}
-              >
+              <Link to="/about" className={`px-2 py-1.5 text-sm font-medium transition rounded-lg ${isActive("/about") ? "bg-cedar/15 text-cedar" : "text-white/70 hover:bg-white/5 hover:text-white"}`}>
                 {t('about')}
               </Link>
             </nav>
 
-            <div className="w-px h-6 bg-white/10" />
+            <div className="w-px h-5 bg-white/10 shrink-0" />
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <LanguageSwitcher />
               {isAdmin && (
-                <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-cedar hover:bg-cedar/10 transition">
-                  <Shield size={18} />
-                  <span>{t('admin')}</span>
+                <Link to="/admin" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-cedar hover:bg-cedar/10 transition">
+                  <Shield size={16} />
+                  <span className="hidden sm:inline">{t('admin')}</span>
                 </Link>
               )}
-
               {user ? (
-                <button onClick={signOut} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">
-                  <LogOut size={18} />
-                  <span>{t('signOut')}</span>
+                <button onClick={signOut} className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition" title={t('signOut')}>
+                  <LogOut size={16} />
+                  <span className="hidden sm:inline">{t('signOut')}</span>
                 </button>
               ) : (
-                <Link to="/login" className="flex items-center gap-2 rounded-lg bg-cedar/90 px-4 py-2 text-sm font-semibold text-onyx hover:bg-cedar transition shadow-sm">
-                  <LogIn size={18} />
-                  <span>{t('signIn')}</span>
+                <Link to="/login" className="flex items-center gap-1.5 rounded-lg bg-cedar/90 px-3 py-1.5 text-sm font-semibold text-onyx hover:bg-cedar transition shadow-sm">
+                  <LogIn size={16} />
+                  <span className="hidden sm:inline">{t('signIn')}</span>
                 </Link>
               )}
             </div>
           </div>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden p-2 -mr-2 text-white/50 hover:text-white transition"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
-        
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 bg-onyx/95 backdrop-blur-md px-4 py-4 space-y-4 shadow-glass absolute left-0 right-0 top-full">
-            <nav className="flex flex-col gap-1">
-              <Link
-                to="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium transition ${
-                  isActive("/")
-                    ? "bg-cedar/15 text-cedar"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {t('home')}
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium transition ${
-                  isActive("/about")
-                    ? "bg-cedar/15 text-cedar"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {t('about')}
-              </Link>
-            </nav>
-            <div className="h-px bg-white/10" />
-            <div className="flex flex-col gap-2">
-              <div className="px-3 py-2">
-                <LanguageSwitcher />
-              </div>
-              {isAdmin && (
-                <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-cedar hover:bg-cedar/10 transition">
-                  <Shield size={18} />
-                  <span>{t('admin')}</span>
-                </Link>
-              )}
-
-              {user ? (
-                <button onClick={() => { signOut(); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition w-full text-left">
-                  <LogOut size={18} />
-                  <span>{t('signOut')}</span>
-                </button>
-              ) : (
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 rounded-lg bg-cedar/90 px-4 py-3 text-sm font-semibold text-onyx hover:bg-cedar transition shadow-sm justify-center mt-2">
-                  <LogIn size={18} />
-                  <span>{t('signIn')}</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Bottom gradient border */}
         <div className="h-px bg-gradient-to-r from-transparent via-cedar/40 to-transparent" />
       </header>

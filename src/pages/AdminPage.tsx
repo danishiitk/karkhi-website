@@ -1,13 +1,13 @@
 import { Shield, Users, Search, Map, Plus, Edit2, Trash2, Check, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { fetchAllProfiles, fetchStats, fetchVillages, updateProfileRole, fetchVillagePeopleCounts, createVillage, updateVillage, deleteVillage, type VillageInsert } from "../lib/queries";
+import { fetchAllProfiles, fetchStats, fetchVillages, updateProfileRole, fetchVillagePeopleCounts, createVillage, updateVillage, deleteVillage, type VillageInsert, deleteUser } from "../lib/queries";
 import type { Profile, UserRole, Village } from "../lib/database.types";
 import { useTranslation } from "../contexts/LanguageContext";
 import { getLocalizedName } from "../lib/i18n";
 
 export default function AdminPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { t, language } = useTranslation();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [villages, setVillages] = useState<Village[]>([]);
@@ -86,6 +86,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteUser = async (p: Profile) => {
+    if (!confirm(`Are you sure you want to permanently delete user ${p.full_name || p.email}? This action cannot be undone.`)) return;
+    try {
+      await deleteUser(p.id);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting user: " + (err as Error).message);
+    }
+  };
+
   const resetVillageForm = () => {
     setVillageForm({ name: "", urduName: "", hindiName: "", slug: "", alternateSpellings: "" });
     setShowAddVillage(false);
@@ -159,18 +170,18 @@ export default function AdminPage() {
         </h1>
 
         {/* ─── Stats Cards ─── */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-ink/10">
-            <h3 className="text-ink/60 font-medium">{t('totalPeople')}</h3>
-            <p className="mt-2 text-4xl font-bold">{stats.totalPeople}</p>
+        <div className="mt-6 md:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6">
+          <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-ink/10 flex items-center justify-between sm:block">
+            <h3 className="text-ink/60 font-medium text-sm md:text-base">{t('totalPeople')}</h3>
+            <p className="text-2xl md:text-4xl font-bold sm:mt-2">{stats.totalPeople}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-ink/10">
-            <h3 className="text-ink/60 font-medium">{t('villages')}</h3>
-            <p className="mt-2 text-4xl font-bold">{stats.totalVillages}</p>
+          <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-ink/10 flex items-center justify-between sm:block">
+            <h3 className="text-ink/60 font-medium text-sm md:text-base">{t('villages')}</h3>
+            <p className="text-2xl md:text-4xl font-bold sm:mt-2">{stats.totalVillages}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-ink/10">
-            <h3 className="text-ink/60 font-medium">{t('registeredUsers')}</h3>
-            <p className="mt-2 text-4xl font-bold">{stats.totalUsers}</p>
+          <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-ink/10 flex items-center justify-between sm:block">
+            <h3 className="text-ink/60 font-medium text-sm md:text-base">{t('registeredUsers')}</h3>
+            <p className="text-2xl md:text-4xl font-bold sm:mt-2">{stats.totalUsers}</p>
           </div>
         </div>
 
@@ -242,9 +253,9 @@ export default function AdminPage() {
               <thead className="bg-ink/5 text-ink/60 font-semibold uppercase">
                 <tr>
                   <th className="px-4 py-3 sm:px-6 sm:py-4">{t('villages')}</th>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('villageSlug')}</th>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('totalPeople')}</th>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4">{t('actions')}</th>
+                  <th className="hidden sm:table-cell px-4 py-3 sm:px-6 sm:py-4">{t('villageSlug')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4 text-center sm:text-left">{t('totalPeople')}</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4 text-right sm:text-left">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/10">
@@ -252,28 +263,42 @@ export default function AdminPage() {
                   <tr key={v.id} className="group">
                     {editingVillageId === v.id ? (
                       <>
-                        <td className="px-4 py-2 sm:px-6 sm:py-3">
-                          <div className="space-y-2">
-                            <input type="text" value={villageForm.name} onChange={e => setVillageForm(f => ({...f, name: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" placeholder={t('englishName')} />
-                            <input type="text" value={villageForm.urduName} onChange={e => setVillageForm(f => ({...f, urduName: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" dir="rtl" lang="ur" placeholder={t('urduName')} />
-                            <input type="text" value={villageForm.hindiName} onChange={e => setVillageForm(f => ({...f, hindiName: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" placeholder={t('hindiName')} />
+                      <td colSpan={4} className="p-4 bg-ink/5 border-b border-ink/10 shadow-inner">
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                          <div className="flex-1 space-y-3">
+                            <div>
+                              <label className="block text-[10px] font-bold text-ink/50 uppercase tracking-wider mb-1">{t('englishName')} *</label>
+                              <input type="text" value={villageForm.name} onChange={e => setVillageForm(f => ({...f, name: e.target.value}))} className="w-full border border-ink/20 rounded-lg px-3 py-2 text-sm focus:border-cedar outline-none bg-white shadow-sm" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-ink/50 uppercase tracking-wider mb-1">{t('urduName')} *</label>
+                              <input type="text" value={villageForm.urduName} onChange={e => setVillageForm(f => ({...f, urduName: e.target.value}))} className="w-full border border-ink/20 rounded-lg px-3 py-2 text-sm focus:border-cedar outline-none bg-white shadow-sm" dir="rtl" lang="ur" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-ink/50 uppercase tracking-wider mb-1">{t('hindiName')}</label>
+                              <input type="text" value={villageForm.hindiName} onChange={e => setVillageForm(f => ({...f, hindiName: e.target.value}))} className="w-full border border-ink/20 rounded-lg px-3 py-2 text-sm focus:border-cedar outline-none bg-white shadow-sm" />
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-2 sm:px-6 sm:py-3">
-                          <input type="text" value={villageForm.slug} onChange={e => setVillageForm(f => ({...f, slug: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none" />
-                          <input type="text" value={villageForm.alternateSpellings} onChange={e => setVillageForm(f => ({...f, alternateSpellings: e.target.value}))} className="w-full border border-ink/20 rounded px-2 py-1 text-sm focus:border-cedar outline-none mt-2" placeholder={t('alternateSpellings')} />
-                        </td>
-                        <td className="px-4 py-2 sm:px-6 sm:py-3">{peopleCounts[v.id] || 0}</td>
-                        <td className="px-4 py-2 sm:px-6 sm:py-3">
-                          <div className="flex items-center gap-2">
-                            <button onClick={handleSaveVillage} disabled={savingVillage} className="p-1.5 text-white bg-cedar hover:bg-cedar/90 rounded-md transition disabled:opacity-50" title={t('save')}>
-                              <Check size={16} />
+                          <div className="flex-1 space-y-3">
+                            <div>
+                              <label className="block text-[10px] font-bold text-ink/50 uppercase tracking-wider mb-1">{t('villageSlug')} *</label>
+                              <input type="text" value={villageForm.slug} onChange={e => setVillageForm(f => ({...f, slug: e.target.value}))} className="w-full border border-ink/20 rounded-lg px-3 py-2 text-sm focus:border-cedar outline-none bg-white shadow-sm" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-ink/50 uppercase tracking-wider mb-1">{t('alternateSpellings')}</label>
+                              <input type="text" value={villageForm.alternateSpellings} onChange={e => setVillageForm(f => ({...f, alternateSpellings: e.target.value}))} className="w-full border border-ink/20 rounded-lg px-3 py-2 text-sm focus:border-cedar outline-none bg-white shadow-sm" placeholder="e.g. Bigra Awal" />
+                            </div>
+                          </div>
+                          <div className="flex sm:flex-col gap-2 shrink-0 pt-1 sm:pt-6">
+                            <button onClick={handleSaveVillage} disabled={savingVillage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-white bg-cedar hover:bg-cedar/90 rounded-lg transition disabled:opacity-50 font-medium shadow-sm">
+                              <Check size={16} /> <span className="sm:hidden">{t('save')}</span>
                             </button>
-                            <button onClick={resetVillageForm} className="p-1.5 text-ink/50 hover:bg-ink/10 rounded-md transition" title={t('cancel')}>
-                              <X size={16} />
+                            <button onClick={resetVillageForm} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-ink/70 bg-white hover:bg-ink/5 border border-ink/20 rounded-lg transition font-medium shadow-sm">
+                              <X size={16} /> <span className="sm:hidden">{t('cancel')}</span>
                             </button>
                           </div>
-                        </td>
+                        </div>
+                      </td>
                       </>
                     ) : (
                       <>
@@ -285,10 +310,10 @@ export default function AdminPage() {
                             <div className="text-[11px] text-ink/40 mt-0.5">{v.alternate_spellings.join(", ")}</div>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 sm:px-6 sm:py-4 text-ink/60">{v.slug}</td>
-                        <td className="px-4 py-2.5 sm:px-6 sm:py-4">{peopleCounts[v.id] || 0}</td>
-                        <td className="px-4 py-2.5 sm:px-6 sm:py-4">
-                          <div className="flex items-center gap-2">
+                        <td className="hidden sm:table-cell px-4 py-2.5 sm:px-6 sm:py-4 text-ink/60">{v.slug}</td>
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4 text-center sm:text-left">{peopleCounts[v.id] || 0}</td>
+                        <td className="px-4 py-2.5 sm:px-6 sm:py-4 text-right sm:text-left">
+                          <div className="flex items-center justify-end sm:justify-start gap-2">
                             <button onClick={() => startEditVillage(v)} className="p-1.5 text-ink/40 hover:text-cedar hover:bg-ink/5 rounded-md transition" title={t('editVillage')}>
                               <Edit2 size={16} />
                             </button>
@@ -374,13 +399,25 @@ export default function AdminPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3 sm:px-6 sm:py-4">
-                      <button 
-                        onClick={() => executeRoleUpdate(p.id, pending.role, pending.assigned_village_id)}
-                        disabled={!hasChanges || isUpdating}
-                        className="text-cedar font-medium hover:underline text-xs disabled:opacity-50 disabled:hover:no-underline"
-                      >
-                        {isUpdating ? 'Updating...' : t('updateRole')}
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button 
+                          onClick={() => executeRoleUpdate(p.id, pending.role, pending.assigned_village_id)}
+                          disabled={!hasChanges || isUpdating}
+                          className="text-cedar font-medium hover:underline text-xs disabled:opacity-50 disabled:hover:no-underline"
+                        >
+                          {isUpdating ? 'Updating...' : t('updateRole')}
+                        </button>
+                        {p.id !== user?.id && (
+                          <button 
+                            onClick={() => handleDeleteUser(p)}
+                            disabled={isUpdating}
+                            className="p-1.5 text-ink/40 hover:text-madder hover:bg-madder/5 rounded-md transition"
+                            title="Delete User"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )})}
